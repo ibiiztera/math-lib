@@ -14,6 +14,26 @@ import java.util.TreeMap;
  */
 public class NotationAlgebrique {
 
+    private Bloc search(Bloc[] bs, int idx) {
+        if(idx==-1)
+            return searchf(bs, idx);
+        if(bs[idx].nbrOperandes==2)
+            bs[idx].contenu.add(searchb(bs, idx));
+        else if(bs[idx].nbrOperandes==1)
+            bs[idx].contenu.add(searchf(bs, idx));
+        else if(bs[idx].nbrOperandes==0)
+            bs[idx].contenu=null;
+        return bs[idx];
+    }
+
+    private Bloc searchb(Bloc[] bs, int idx) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    private Bloc searchf(Bloc[] bs, int idx) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
     public class Bloc {
 
         public TypeBloc type;
@@ -25,6 +45,7 @@ public class NotationAlgebrique {
         public int priorite = -1;
         public int numero = 0;
         public Double valeur;
+        private int nbrOperandes;
     }
 
     public String polonaise(String algebrique) {
@@ -62,7 +83,6 @@ public class NotationAlgebrique {
                     if (cpt == 0) {
                         Bloc b = new Bloc();
                         b.chaine = algebrique.substring(end, start);
-                        b.contenu = null;
                         b.start = end;
                         b.end = start;
                         b.numero = ++numero;
@@ -110,7 +130,6 @@ public class NotationAlgebrique {
             }
             if (b.priorite != -1) {
                 b.chaine = "" + c;
-                b.contenu = null;
                 b.start = i;
                 b.end = c == '^' ? i + 2 : i + 1;
                 if (c == '^') {
@@ -127,7 +146,6 @@ public class NotationAlgebrique {
                 Double v =Double.parseDouble(algebrique.substring(i, cpt));
                 b = new Bloc();
                 b.chaine = algebrique.substring(i, cpt);
-                b.contenu = null;
                 b.end = cpt;
                 b.start = i;
                 b.type = TypeBloc.NOMBRE;
@@ -150,7 +168,6 @@ public class NotationAlgebrique {
 
                 b = new Bloc();
                 b.chaine = algebrique.substring(i, cpt - 1);
-                b.contenu = null;
                 b.end = cpt - 1;
                 b.start = i;
                 b.type = fct ? TypeBloc.FONCTION : TypeBloc.VARIABLE;
@@ -175,6 +192,11 @@ public class NotationAlgebrique {
         // 3 Droite
         // 4 Gauche -> Gauche Droite 
         // 5 Droite -> ....
+        Bloc [] bs = new Bloc[blocs.size()];
+        for(int i= 0; i<blocs.size(); i++)
+            bs[i] = blocs.get(i);
+        
+        Bloc idx = search(bs, -1);
         
         return polonaise;
     }
