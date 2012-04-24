@@ -70,14 +70,15 @@ public class NotationAlgebrique {
         public int numero = 0;
         public Double valeur;
         private int nbrOperandes;
+
+        private String calculer() {
+            throw new UnsupportedOperationException("Not yet implemented");
+        }
     }
 
-    public String polonaise(String algebrique) {
+    public Bloc polonaise(String algebrique) {
         int l = algebrique.length();
         ArrayList<Bloc> blocs = new ArrayList<Bloc>();
-        ArrayList<Bloc> pile = new ArrayList<Bloc>();
-        TreeMap<String, String> arbre = new TreeMap<String, String>();
-        String polonaise = "";
         /// rechercher les parentheses et fonctions
 
         int[] startParentheses = new int[algebrique.length() / 2];
@@ -222,13 +223,15 @@ public class NotationAlgebrique {
         
         Bloc idx = search(bs, -1);
         
-        return polonaise;
+        return idx;
     }
 
     public static void main(String[] args) {
         String[] str = new String[]{
             "a*b+(4+1)*5", "a b * 4 1 + 5 * +"
+                
         };
-
+        for(int i=0; i<str.length; i++)
+            System.out.println(str[i] + " = " + new NotationAlgebrique().polonaise(str[i]).calculer());
     }
 }
