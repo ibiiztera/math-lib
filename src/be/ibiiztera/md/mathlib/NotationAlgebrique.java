@@ -27,11 +27,35 @@ public class NotationAlgebrique {
     }
 
     private Bloc searchb(Bloc[] bs, int idx) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        int i=0;
+        int pmin = 10000;
+        int idx_retenu = idx;
+        while(i>=0)
+        {
+            if(bs[i]!=null && bs[i].priorite<pmin)
+            {
+                idx_retenu = i;
+                pmin = bs[i].priorite;
+            }
+            i--;
+        }
+        return bs[idx_retenu];
     }
 
     private Bloc searchf(Bloc[] bs, int idx) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        int i=0;
+        int pmin = 10000;
+        int idx_retenu = idx;
+        while(i<bs.length)
+        {
+            if(bs[i]!=null && bs[i].priorite<pmin)
+            {
+                idx_retenu = i;
+                pmin = bs[i].priorite;
+            }
+            i++;
+        }
+        return bs[idx_retenu];
     }
 
     public class Bloc {
