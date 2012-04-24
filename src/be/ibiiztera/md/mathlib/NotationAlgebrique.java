@@ -1,110 +1,188 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package be.ibiiztera.md.mathlib;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
+import java.util.TreeMap;
 
 /**
  *
  * @author Manuel DAHMEN
  */
 public class NotationAlgebrique {
-    private Element base;
-    private Element elemBase() {
-        return base;
+
+    public class Bloc {
+
+        public TypeBloc type;
+        public String chaine;
+        public int start;
+        public int end;
+        public ArrayList<Bloc> contenu = new ArrayList<Bloc>();
+        public String fonction;
+        public int priorite = -1;
+        public int numero = 0;
+        public Double valeur;
     }
 
-    public class Operande implements Element{
+    public String polonaise(String algebrique) {
+        int l = algebrique.length();
+        ArrayList<Bloc> blocs = new ArrayList<Bloc>();
+        ArrayList<Bloc> pile = new ArrayList<Bloc>();
+        TreeMap<String, String> arbre = new TreeMap<String, String>();
+        String polonaise = "";
+        /// rechercher les parentheses et fonctions
 
-        public Operande(String txt) {
-        }
+        int[] startParentheses = new int[algebrique.length() / 2];
+        int[] endParentheses = new int[algebrique.length() / 2];
+        int startParenthesesCpt = 0;
+        int endParenthesesCpt = 0;
+        int parentheses = 0;
+        int numero = 0;
+        for (int i = 0; i < l; i++) {
+            // recherche de fonction et de parenthese
+            if (algebrique.charAt(i) == '(') {
+                startParentheses[startParenthesesCpt++] = i;
+                parentheses += 100;
+            } else if (algebrique.charAt(i) == ')') {
+                parentheses -= 100;
+                endParentheses[endParenthesesCpt++] = i;
+                int start = i;
+                int end = i - 1;
+                int cpt = 1;
+                while (end >= 0) {
+                    if (algebrique.charAt(i) == ')') {
+                        cpt++;
+                    }
+                    if (algebrique.charAt(i) == '(') {
+                        cpt--;
+                    }
+                    if (cpt == 0) {
+                        Bloc b = new Bloc();
+                        b.chaine = algebrique.substring(end, start);
+                        b.contenu = null;
+                        b.start = end;
+                        b.end = start;
+                        b.numero = ++numero;
+                        if (end == 0) {
+                            b.type = TypeBloc.PARENTHESE;
+                        } else {
+                            if (Character.isLetter(algebrique.charAt(end - 1))) {
+                                b.type = TypeBloc.FONCTION;
+                                int cptFct = 0;
+                                while (end - 1 + cptFct >= 0 && Character.isLetter(algebrique.charAt(end - 1 + cptFct))) {
+                                    cptFct--;
+                                }
+                                b.fonction = algebrique.substring(end + cptFct, end - 1);
+                            }
 
-        @Override
-       public String txt() {
-            throw new UnsupportedOperationException("Not supported yet.");
+                        }
+                    }
+                    i--;
+                }
+            }
+            char c = algebrique.charAt(i);
+            Bloc b = new Bloc();
+            b.priorite = -1;
+            switch (c) {
+
+                case '+':
+                    b.priorite = 4 + parentheses;
+                    break;
+                case '-':
+                    b.priorite = 5 + parentheses;
+                    break;
+                case '/':
+                    b.priorite = 6 + parentheses;
+                    break;
+                case '*':
+                    b.priorite = 7 + parentheses;
+                    if (algebrique.charAt(i + 1) == '*') {
+                        c = '^';
+                    } else {
+                        break;
+                    }
+                case '^':
+                    b.priorite = 9 + parentheses;
+                    break;
+            }
+            if (b.priorite != -1) {
+                b.chaine = "" + c;
+                b.contenu = null;
+                b.start = i;
+                b.end = c == '^' ? i + 2 : i + 1;
+                if (c == '^') {
+                    i++;
+                }
+                b.type = TypeBloc.OPERATEUR;
+                b.numero = ++numero;
+            }
+            // Rercherche de nombres
+            if (Character.isDigit(algebrique.charAt(i)) || algebrique.charAt(i)=='.') {
+                int cpt = i;
+                while(i+1<l && Character.isDigit(algebrique.charAt(i+1)) || algebrique.charAt(i+1)=='.')
+                    cpt++;
+                Double v =Double.parseDouble(algebrique.substring(i, cpt));
+                b = new Bloc();
+                b.chaine = algebrique.substring(i, cpt);
+                b.contenu = null;
+                b.end = cpt;
+                b.start = i;
+                b.type = TypeBloc.NOMBRE;
+                b.valeur = v;
+                b.numero = ++numero;
+                b.priorite = 1000;
+                i = cpt+1;
+                blocs.add(b);
+            }
+            // Recherche des variables
+            if (Character.isLetter(algebrique.charAt(i))) {
+                int cpt = i;
+                boolean fct = false;
+                while (cpt < l && Character.isLetter(cpt)) {
+                    cpt++;
+                }
+                if (algebrique.charAt(cpt) == '(') {
+                    fct = true;
+                }
+
+                b = new Bloc();
+                b.chaine = algebrique.substring(i, cpt - 1);
+                b.contenu = null;
+                b.end = cpt - 1;
+                b.start = i;
+                b.type = fct ? TypeBloc.FONCTION : TypeBloc.VARIABLE;
+                b.numero = ++numero;
+                if (b.type == TypeBloc.FONCTION) {
+                    parentheses += 100;
+                }
+                b.priorite = 2 + parentheses;
+                b.numero = ++numero;
+                i = b.type == TypeBloc.FONCTION ? cpt + 1 : cpt;
+                parentheses += b.type == TypeBloc.FONCTION ? 100 : 0;
+            }
         }
-        public double calculer() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
+        // Construire l'arbre à partir de la notation algébrique
+        // TODO: 
+                // Chercher si opérateurs de priorité supérieure précède
+                // Si oui, réservez dans la pile
+               // Si non ajoutez les opérandes
+        // Chercher itérativement par ordre de priorité : de plus basse à plus haute
+        // 1 Premier
+        // 2 Gauche
+        // 3 Droite
+        // 4 Gauche -> Gauche Droite 
+        // 5 Droite -> ....
         
+        return polonaise;
     }
-    public interface Element
-    {
-        public String txt();
-        public double calculer();
-    }
-    public class Operateur extends Operande
-    {
-        public Operateur(String t)
-        {
-            super(t);
-        }
-        private String txt;
 
-        @Override
-        public String txt() {
-            return txt;
-        }
-        public void setOperandes(List<Operande> op)
-        {
-            
-        }
-        @Override
-        public double calculer()
-        {
-            return 0;
-        }
-        
-    }
-    public class Variable implements Element
-    {
+    public static void main(String[] args) {
+        String[] str = new String[]{
+            "a*b+(4+1)*5", "a b * 4 1 + 5 * +"
+        };
 
-        @Override
-        public String txt() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public double calculer() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-        
-    }
-    public class Nombre implements Element
-    {
-
-        @Override
-        public String txt() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public double calculer() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-        
-    }
-    private int highest(List<Element> liste)
-    {
-        return -1;
-    }
-    public Fonction in(String infixee)
-    {
-        Fonction f = new Fonction();
-        List<Element> liste = liste(infixee);
-        while(liste.size()>0)
-        {
-            
-        }
-        
-        return f;
-    }
-    private List<Element> liste(String x)
-    {
-        ArrayList<Element> liste = new ArrayList<Element>();
-        return liste;
-    }
-    public double calculer()
-    {
-        return elemBase().calculer();
     }
 }
